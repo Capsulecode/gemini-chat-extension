@@ -461,6 +461,21 @@ describe('responseCompleteNotification background V2', () => {
     })
   })
 
+  it('rejects audio asset save messages with non-data URLs (SSRF prevention)', async () => {
+    const response = await sendRuntimeMessage({
+      type: RESPONSE_COMPLETE_NOTIFICATION_AUDIO_ASSET_SAVE_MESSAGE,
+      payload: {
+        fileName: 'malicious.mp3',
+        mimeType: 'audio/mpeg',
+        size: 100,
+        dataUrl: 'http://169.254.169.254/latest/meta-data/',
+      },
+    })
+
+    expect(response).toBeUndefined()
+    expect(persistAudioAssetMock).not.toHaveBeenCalled()
+  })
+
   it('deletes uploaded notification audio from the background origin', async () => {
     const response = await sendRuntimeMessage({
       type: RESPONSE_COMPLETE_NOTIFICATION_AUDIO_ASSET_DELETE_MESSAGE,
