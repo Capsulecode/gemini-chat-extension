@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MediaItemStatus, type MediaItem } from '@/utils/stuffMediaParser'
 import { stuffDataCache } from './dataCache'
-import { resolveOpenInNewTabUrl } from './navigation'
+import { resolveOpenInNewTabUrl, handleOpenInNewTab } from './navigation'
 
 vi.mock('wxt/browser', () => ({
   browser: {
@@ -96,5 +96,17 @@ describe('resolveOpenInNewTabUrl', () => {
     expect(resolveOpenInNewTabUrl(createCard(null))).toBeNull()
     expect(resolveOpenInNewTabUrl(createCard('invalid'))).toBeNull()
     expect(resolveOpenInNewTabUrl(createCard('299880;data:[3,[]]'))).toBeNull()
+  })
+})
+
+describe('handleOpenInNewTab', () => {
+  it('calls window.open with _blank and noopener,noreferrer', () => {
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
+    const testUrl = 'https://gemini.google.com/app/123#456'
+
+    handleOpenInNewTab(testUrl)
+
+    expect(openSpy).toHaveBeenCalledWith(testUrl, '_blank', 'noopener,noreferrer')
+    openSpy.mockRestore()
   })
 })
