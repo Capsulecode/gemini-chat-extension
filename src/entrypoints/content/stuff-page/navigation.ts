@@ -132,13 +132,14 @@ export function handleOpenInNewTab(url: string): void {
         payload: { url },
       }).catch((error) => {
         console.warn('[Navigation] Failed to request new tab:', error)
-        window.open(url, '_blank')
+        // Pass noopener,noreferrer to prevent window.opener hijacking / reverse tabnabbing
+        window.open(url, '_blank', 'noopener,noreferrer')
       })
       return
     }
 
-    // Open in new tab
-    window.open(url, '_blank')
+    // Open in new tab with noopener,noreferrer to prevent window.opener hijacking
+    window.open(url, '_blank', 'noopener,noreferrer')
   } catch (error) {
     console.error('[Navigation] Error opening in new tab:', error)
   }
