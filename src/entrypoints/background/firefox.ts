@@ -295,8 +295,11 @@ export function startFirefoxBackground(): void {
       return
     }
 
-    if (parsed.origin !== 'https://gemini.google.com') {
-      console.warn('[FirefoxBackground] Blocked open tab for non-gemini origin:', parsed.origin)
+    if (
+      parsed.origin !== 'https://gemini.google.com' ||
+      (parsed.protocol !== 'https:' && parsed.protocol !== 'http:')
+    ) {
+      console.warn('[FirefoxBackground] Blocked open tab for non-gemini origin or invalid protocol:', parsed.origin, parsed.protocol)
       return
     }
 

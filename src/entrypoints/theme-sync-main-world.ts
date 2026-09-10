@@ -93,6 +93,11 @@ function applyAppearance(detail: ThemeAppearanceApplyEventDetail): void {
 }
 
 export default defineUnlistedScript(() => {
+  const isValidBardColorTheme = (
+    value: unknown,
+  ): value is 'Bard-Light-Theme' | 'Bard-Dark-Theme' | null =>
+    value === null || value === undefined || value === 'Bard-Light-Theme' || value === 'Bard-Dark-Theme'
+
   const handleAppearanceApply = (event: Event) => {
     const customEvent = event as CustomEvent<ThemeAppearanceApplyEventDetail>
     const detail = customEvent.detail
@@ -100,7 +105,11 @@ export default defineUnlistedScript(() => {
       href: window.location.href,
       detail,
     })
-    if (!detail || (detail.theme !== 'light' && detail.theme !== 'dark')) {
+    if (
+      !detail ||
+      (detail.theme !== 'light' && detail.theme !== 'dark') ||
+      !isValidBardColorTheme(detail.bardColorTheme)
+    ) {
       return
     }
     applyAppearance(detail)
@@ -120,7 +129,11 @@ export default defineUnlistedScript(() => {
       href: window.location.href,
       detail,
     })
-    if (!detail || (detail.theme !== 'light' && detail.theme !== 'dark')) {
+    if (
+      !detail ||
+      (detail.theme !== 'light' && detail.theme !== 'dark') ||
+      !isValidBardColorTheme(detail.bardColorTheme)
+    ) {
       return
     }
     applyAppearance(detail)
