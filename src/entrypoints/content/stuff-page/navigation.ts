@@ -126,19 +126,36 @@ export function handleOpenInNewTab(url: string): void {
       url,
     })
 
+    // Security: Validate URL scheme to prevent javascript: or unsafe protocols
+    let parsedUrl: URL
+    try {
+      parsedUrl = new URL(url, window.location.href)
+    } catch {
+      console.warn('[Navigation] Blocked opening invalid URL:', url)
+      return
+    }
+
+    if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+      console.warn('[Navigation] Blocked opening URL with unsafe scheme:', parsedUrl.protocol)
+      return
+    }
+
+    const safeUrl = parsedUrl.href
+
     if (import.meta.env.FIREFOX) {
       void browser.runtime.sendMessage({
         type: OPEN_IN_NEW_TAB_MESSAGE,
-        payload: { url },
+        payload: { url: safeUrl },
       }).catch((error) => {
         console.warn('[Navigation] Failed to request new tab:', error)
-        window.open(url, '_blank')
+        // Security: Use noopener,noreferrer to prevent window.opener manipulation (tabnabbing)
+        window.open(safeUrl, '_blank', 'noopener,noreferrer')
       })
       return
     }
 
-    // Open in new tab
-    window.open(url, '_blank')
+    // Security: Use noopener,noreferrer to prevent window.opener manipulation (tabnabbing)
+    window.open(safeUrl, '_blank', 'noopener,noreferrer')
   } catch (error) {
     console.error('[Navigation] Error opening in new tab:', error)
   }
