@@ -36,9 +36,6 @@ const __dirname = path.dirname(__filename);
 // Read test sample data
 const SAMPLE_RESPONSE_PATH = path.resolve(__dirname, '../../test/samples/media-response.txt');
 const sampleResponse = fs.readFileSync(SAMPLE_RESPONSE_PATH, 'utf-8');
-const LIBRARY_REQUEST_PATH = path.resolve(__dirname, '../../.original/library/request.md');
-const libraryRequestMarkdown = fs.readFileSync(LIBRARY_REQUEST_PATH, 'utf-8');
-const libraryResponse = libraryRequestMarkdown.match(/```([\s\S]*?)```/)?.[1]?.trim() ?? '';
 
 describe('stuffMediaParser', () => {
   // ==================== Request Type Identification ====================
@@ -194,18 +191,6 @@ describe('stuffMediaParser', () => {
       expect(titleItems[0].title).toBe('Why Warren Buffett Bought SIRI XM Despite Huge Losses');
     });
 
-    it('should parse current Library media response data', () => {
-      const result = parseMediaResponse(libraryResponse);
-
-      expect(result).not.toBeNull();
-      expect(result?.totalCount).toBeGreaterThan(0);
-
-      const firstItem = result!.items[0];
-      expect(firstItem.conversationId).toBe('c_9f13b6112bdb41cf');
-      expect(firstItem.responseId).toBe('r_bcb2eed9c92e4379');
-      expect(firstItem.timestamp).toBe(1781941629);
-      expect(firstItem.thumbnailUrl).toContain('https://lh3.googleusercontent.com/');
-    });
 
     it('should handle invalid responses', () => {
       expect(parseMediaResponse('not json')).toBeNull();

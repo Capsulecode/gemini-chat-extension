@@ -191,14 +191,64 @@ function WidthControl({
 }
 
 function SvgIcon({ svg }: { svg: string }) {
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!containerRef.current) return
+    containerRef.current.replaceChildren()
+    if (!svg) return
+
+    try {
+      const parser = new DOMParser()
+      const doc = parser.parseFromString(svg, 'image/svg+xml')
+      const svgEl = doc.querySelector('svg')
+      if (svgEl) {
+        // Comprehensive SVG sanitization:
+        // Remove dangerous tags
+        const DANGEROUS_TAGS = ['script', 'foreignobject', 'iframe', 'object', 'embed', 'animate', 'set', 'use']
+        DANGEROUS_TAGS.forEach((tag) => {
+          svgEl.querySelectorAll(tag).forEach((el) => el.remove())
+        })
+
+        const sanitizeElement = (el: Element) => {
+          for (const attr of Array.from(el.attributes)) {
+            const attrName = attr.name.toLowerCase()
+            const attrValue = attr.value.trim().toLowerCase()
+
+            // Remove inline event handlers (e.g. onclick, onload)
+            if (attrName.startsWith('on')) {
+              el.removeAttribute(attr.name)
+              continue
+            }
+
+            // Remove dangerous URI schemes in href, xlink:href, src, etc.
+            if (
+              attrValue.startsWith('javascript:') ||
+              attrValue.startsWith('data:') ||
+              attrValue.startsWith('vbscript:')
+            ) {
+              el.removeAttribute(attr.name)
+            }
+          }
+        }
+
+        sanitizeElement(svgEl)
+        svgEl.querySelectorAll('*').forEach(sanitizeElement)
+        containerRef.current.appendChild(document.importNode(svgEl, true))
+      }
+    } catch {
+      // Ignore parsing errors
+    }
+  }, [svg])
+
   return (
     <Box
+      ref={containerRef}
       aria-hidden="true"
       boxSize={4}
       display="block"
       flexShrink={0}
       lineHeight="1"
-      dangerouslySetInnerHTML={{ __html: svg }}
       css={{ '& svg': { display: 'block', width: '100%', height: '100%' } }}
     />
   )
