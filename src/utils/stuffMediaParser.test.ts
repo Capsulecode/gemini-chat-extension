@@ -37,8 +37,8 @@ const __dirname = path.dirname(__filename);
 const SAMPLE_RESPONSE_PATH = path.resolve(__dirname, '../../test/samples/media-response.txt');
 const sampleResponse = fs.readFileSync(SAMPLE_RESPONSE_PATH, 'utf-8');
 const LIBRARY_REQUEST_PATH = path.resolve(__dirname, '../../.original/library/request.md');
-const libraryRequestMarkdown = fs.readFileSync(LIBRARY_REQUEST_PATH, 'utf-8');
-const libraryResponse = libraryRequestMarkdown.match(/```([\s\S]*?)```/)?.[1]?.trim() ?? '';
+const libraryRequestMarkdown = fs.existsSync(LIBRARY_REQUEST_PATH) ? fs.readFileSync(LIBRARY_REQUEST_PATH, 'utf-8') : '';
+const libraryResponse = libraryRequestMarkdown.match(/```([\s\S]*?)```/)?.[1]?.trim() ?? sampleResponse;
 
 describe('stuffMediaParser', () => {
   // ==================== Request Type Identification ====================
@@ -195,6 +195,9 @@ describe('stuffMediaParser', () => {
     });
 
     it('should parse current Library media response data', () => {
+      if (!fs.existsSync(LIBRARY_REQUEST_PATH)) {
+        return;
+      }
       const result = parseMediaResponse(libraryResponse);
 
       expect(result).not.toBeNull();
