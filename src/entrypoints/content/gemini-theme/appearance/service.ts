@@ -128,12 +128,18 @@ function dispatchMainWorldAppearanceApply(
     return false
   }
 
+  const origin = window.location.origin
+  // Security check: ensure origin is valid and uses http/https protocol (not "null" or untrusted)
+  if (!origin || origin === 'null' || (!origin.startsWith('http://') && !origin.startsWith('https://'))) {
+    return false
+  }
+
   try {
     window.postMessage({
       source: 'gpk-theme-sync',
       type: 'apply',
       detail,
-    }, window.location.origin)
+    }, origin)
     console.log('[ThemeAppearanceDebug] dispatchMainWorldAppearanceApply postMessage sent', {
       pageOrigin: typeof location !== 'undefined' ? location.origin : null,
     })

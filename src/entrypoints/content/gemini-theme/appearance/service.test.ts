@@ -168,6 +168,31 @@ describe('appearance service', () => {
     expect(setItemSpy).not.toHaveBeenCalled()
   })
 
+  it('does not post message when location origin is "null" or invalid protocol', () => {
+    document.documentElement.setAttribute('data-gpk-theme-sync-ready', 'true')
+    const postMessageSpy = vi.spyOn(window, 'postMessage')
+
+    const originalLocation = window.location
+    // Mock location with "null" origin
+    Object.defineProperty(window, 'location', {
+      value: { ...originalLocation, origin: 'null' },
+      writable: true,
+      configurable: true,
+    })
+
+    const state = setAppearanceMode('dark')
+
+    expect(state).toEqual({ mode: 'dark', effectiveTheme: 'dark' })
+    expect(postMessageSpy).not.toHaveBeenCalled()
+    expect(localStorage.getItem('theme')).toBe('dark')
+
+    Object.defineProperty(window, 'location', {
+      value: originalLocation,
+      writable: true,
+      configurable: true,
+    })
+  })
+
   it('subscribes/unsubscribes system theme change with modern event listeners', () => {
     const matchMediaMock = createModernMatchMediaMock(false)
     const onChange = vi.fn()
