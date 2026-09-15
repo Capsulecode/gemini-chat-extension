@@ -1,3 +1,4 @@
+import { defineUnlistedScript } from 'wxt/utils/define-unlisted-script'
 import { GEM_EXT_EVENTS } from '@/common/event'
 
 const STORAGE_KEY_THEME = 'theme'
@@ -64,6 +65,21 @@ function dispatchSyntheticStorageEvent(
   }
 }
 
+function isValidDetail(detail: unknown): detail is ThemeAppearanceApplyEventDetail {
+  if (!detail || typeof detail !== 'object') return false
+  const d = detail as Record<string, unknown>
+  if (d.theme !== 'light' && d.theme !== 'dark') return false
+  if (d.mode !== 'system' && d.mode !== 'light' && d.mode !== 'dark') return false
+  if (
+    d.bardColorTheme !== null &&
+    d.bardColorTheme !== 'Bard-Light-Theme' &&
+    d.bardColorTheme !== 'Bard-Dark-Theme'
+  ) {
+    return false
+  }
+  return true
+}
+
 function applyAppearance(detail: ThemeAppearanceApplyEventDetail): void {
   const oldTheme = safeGetStorageValue(STORAGE_KEY_THEME)
   const oldBardColorTheme = safeGetStorageValue(STORAGE_KEY_BARD_COLOR_THEME)
@@ -100,7 +116,7 @@ export default defineUnlistedScript(() => {
       href: window.location.href,
       detail,
     })
-    if (!detail || (detail.theme !== 'light' && detail.theme !== 'dark')) {
+    if (!isValidDetail(detail)) {
       return
     }
     applyAppearance(detail)
@@ -112,7 +128,7 @@ export default defineUnlistedScript(() => {
     const data = event.data as {
       source?: string
       type?: string
-      detail?: ThemeAppearanceApplyEventDetail
+      detail?: unknown
     }
     if (data?.source !== 'gpk-theme-sync' || data?.type !== 'apply') return
     const detail = data.detail
@@ -120,7 +136,7 @@ export default defineUnlistedScript(() => {
       href: window.location.href,
       detail,
     })
-    if (!detail || (detail.theme !== 'light' && detail.theme !== 'dark')) {
+    if (!isValidDetail(detail)) {
       return
     }
     applyAppearance(detail)
