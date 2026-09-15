@@ -1,3 +1,6 @@
+import { vi } from 'vitest'
+
+
 const storageState = new Map<string, unknown>()
 const storageWatchers = new Map<string, Set<(value: unknown) => void>>()
 
