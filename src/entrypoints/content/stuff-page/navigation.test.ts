@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MediaItemStatus, type MediaItem } from '@/utils/stuffMediaParser'
 import { stuffDataCache } from './dataCache'
-import { resolveOpenInNewTabUrl } from './navigation'
+import { resolveOpenInNewTabUrl, handleOpenInNewTab } from './navigation'
 
 vi.mock('wxt/browser', () => ({
   browser: {
@@ -96,5 +96,46 @@ describe('resolveOpenInNewTabUrl', () => {
     expect(resolveOpenInNewTabUrl(createCard(null))).toBeNull()
     expect(resolveOpenInNewTabUrl(createCard('invalid'))).toBeNull()
     expect(resolveOpenInNewTabUrl(createCard('299880;data:[3,[]]'))).toBeNull()
+  })
+})
+
+describe('handleOpenInNewTab', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('opens valid Gemini URL with noopener,noreferrer', () => {
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
+    const validUrl = `${window.location.origin}/app/123#456`
+
+    handleOpenInNewTab(validUrl)
+
+    expect(openSpy).toHaveBeenCalledWith(validUrl, '_blank', 'noopener,noreferrer')
+  })
+
+  it('blocks non-http/https protocol schemes like javascript:', () => {
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    handleOpenInNewTab('javascript:alert(1)')
+
+    expect(openSpy).not.toHaveBeenCalled()
+    expect(warnSpy).toHaveBeenCalledWith(
+      '[Navigation] Blocked tab navigation due to invalid protocol:',
+      'javascript:',
+    )
+  })
+
+  it('blocks unauthorized external origins', () => {
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    handleOpenInNewTab('https://malicious-website.com/app/123')
+
+    expect(openSpy).not.toHaveBeenCalled()
+    expect(warnSpy).toHaveBeenCalledWith(
+      '[Navigation] Blocked tab navigation to unauthorized origin:',
+      'https://malicious-website.com',
+    )
   })
 })

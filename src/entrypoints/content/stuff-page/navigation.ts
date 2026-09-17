@@ -122,23 +122,38 @@ export function resolveOpenInNewTabUrl(cardElement: Element): string | null {
  */
 export function handleOpenInNewTab(url: string): void {
   try {
+    // Validate URL scheme and origin to prevent unsafe navigation (e.g., javascript: or cross-origin URLs)
+    const parsedUrl = new URL(url, window.location.origin)
+    if (parsedUrl.protocol !== 'https:' && parsedUrl.protocol !== 'http:') {
+      console.warn('[Navigation] Blocked tab navigation due to invalid protocol:', parsedUrl.protocol)
+      return
+    }
+
+    const isGeminiOrigin = parsedUrl.origin === 'https://gemini.google.com' || parsedUrl.origin === window.location.origin
+    if (!isGeminiOrigin) {
+      console.warn('[Navigation] Blocked tab navigation to unauthorized origin:', parsedUrl.origin)
+      return
+    }
+
+    const safeUrl = parsedUrl.href
     console.log('[Navigation] Opening in new tab:', {
-      url,
+      url: safeUrl,
     })
 
     if (import.meta.env.FIREFOX) {
       void browser.runtime.sendMessage({
         type: OPEN_IN_NEW_TAB_MESSAGE,
-        payload: { url },
+        payload: { url: safeUrl },
       }).catch((error) => {
         console.warn('[Navigation] Failed to request new tab:', error)
-        window.open(url, '_blank')
+        // Prevent reverse tabnabbing and window object leakage
+        window.open(safeUrl, '_blank', 'noopener,noreferrer')
       })
       return
     }
 
-    // Open in new tab
-    window.open(url, '_blank')
+    // Open in new tab securely
+    window.open(safeUrl, '_blank', 'noopener,noreferrer')
   } catch (error) {
     console.error('[Navigation] Error opening in new tab:', error)
   }
