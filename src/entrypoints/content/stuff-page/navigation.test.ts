@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MediaItemStatus, type MediaItem } from '@/utils/stuffMediaParser'
 import { stuffDataCache } from './dataCache'
-import { resolveOpenInNewTabUrl } from './navigation'
+import { handleOpenInNewTab, resolveOpenInNewTabUrl } from './navigation'
 
 vi.mock('wxt/browser', () => ({
   browser: {
@@ -96,5 +96,31 @@ describe('resolveOpenInNewTabUrl', () => {
     expect(resolveOpenInNewTabUrl(createCard(null))).toBeNull()
     expect(resolveOpenInNewTabUrl(createCard('invalid'))).toBeNull()
     expect(resolveOpenInNewTabUrl(createCard('299880;data:[3,[]]'))).toBeNull()
+  })
+})
+
+describe('handleOpenInNewTab security validation', () => {
+  beforeEach(() => {
+    vi.spyOn(window, 'open').mockImplementation(() => null)
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('opens valid same-origin HTTP/HTTPS URLs', () => {
+    const validUrl = `${window.location.origin}/app/abc123#def456`
+    handleOpenInNewTab(validUrl)
+    expect(window.open).toHaveBeenCalledWith(validUrl, '_blank')
+  })
+
+  it('blocks javascript: URIs from opening', () => {
+    handleOpenInNewTab('javascript:alert(1)')
+    expect(window.open).not.toHaveBeenCalled()
+  })
+
+  it('blocks external origins from opening', () => {
+    handleOpenInNewTab('https://attacker.com/malicious')
+    expect(window.open).not.toHaveBeenCalled()
   })
 })
