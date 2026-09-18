@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MediaItemStatus, type MediaItem } from '@/utils/stuffMediaParser'
 import { stuffDataCache } from './dataCache'
-import { resolveOpenInNewTabUrl } from './navigation'
+import { handleOpenInNewTab, resolveOpenInNewTabUrl } from './navigation'
 
 vi.mock('wxt/browser', () => ({
   browser: {
@@ -96,5 +96,35 @@ describe('resolveOpenInNewTabUrl', () => {
     expect(resolveOpenInNewTabUrl(createCard(null))).toBeNull()
     expect(resolveOpenInNewTabUrl(createCard('invalid'))).toBeNull()
     expect(resolveOpenInNewTabUrl(createCard('299880;data:[3,[]]'))).toBeNull()
+  })
+})
+
+describe('handleOpenInNewTab', () => {
+  let openSpy: ReturnType<typeof vi.spyOn>
+
+  beforeEach(() => {
+    openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('opens valid https URL in new tab with noopener,noreferrer', () => {
+    const validUrl = 'https://gemini.google.com/app/123#456'
+    handleOpenInNewTab(validUrl)
+
+    expect(openSpy).toHaveBeenCalledWith(validUrl, '_blank', 'noopener,noreferrer')
+  })
+
+  it('rejects invalid or unsafe non-http/https URLs', () => {
+    handleOpenInNewTab('javascript:alert(1)')
+    expect(openSpy).not.toHaveBeenCalled()
+
+    handleOpenInNewTab('data:text/html,<script>alert(1)</script>')
+    expect(openSpy).not.toHaveBeenCalled()
+
+    handleOpenInNewTab('not-a-url')
+    expect(openSpy).not.toHaveBeenCalled()
   })
 })
