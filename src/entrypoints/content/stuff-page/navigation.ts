@@ -126,19 +126,38 @@ export function handleOpenInNewTab(url: string): void {
       url,
     })
 
+    // Security Check: Validate URL format, scheme, and origin to prevent XSS (e.g. javascript: URIs) and open redirects
+    let parsed: URL
+    try {
+      parsed = new URL(url, window.location.origin)
+    } catch {
+      console.warn('[Navigation] Blocked invalid URL format:', url)
+      return
+    }
+
+    if (
+      parsed.origin !== window.location.origin ||
+      (parsed.protocol !== 'https:' && parsed.protocol !== 'http:')
+    ) {
+      console.warn('[Navigation] Blocked opening URL with invalid origin/protocol:', url)
+      return
+    }
+
+    const safeUrl = parsed.href
+
     if (import.meta.env.FIREFOX) {
       void browser.runtime.sendMessage({
         type: OPEN_IN_NEW_TAB_MESSAGE,
-        payload: { url },
+        payload: { url: safeUrl },
       }).catch((error) => {
         console.warn('[Navigation] Failed to request new tab:', error)
-        window.open(url, '_blank')
+        window.open(safeUrl, '_blank')
       })
       return
     }
 
     // Open in new tab
-    window.open(url, '_blank')
+    window.open(safeUrl, '_blank')
   } catch (error) {
     console.error('[Navigation] Error opening in new tab:', error)
   }
