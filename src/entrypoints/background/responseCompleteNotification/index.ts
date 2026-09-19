@@ -597,6 +597,10 @@ function handleRuntimeMessage(
 }
 
 async function dataUrlToBlob(dataUrl: string, fallbackMimeType: string): Promise<Blob> {
+  // Validate dataUrl scheme to prevent arbitrary network requests (SSRF)
+  if (!dataUrl.startsWith('data:')) {
+    throw new Error('invalid-data-url')
+  }
   const response = await fetch(dataUrl)
   const blob = await response.blob()
   if (blob.type) {
