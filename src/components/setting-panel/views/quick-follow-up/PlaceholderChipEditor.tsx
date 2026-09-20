@@ -18,6 +18,22 @@ export interface PlaceholderChipEditorProps {
 
 const CHIP_DATA_ATTR = 'data-placeholder-chip'
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+function escapeCssString(str: string): string {
+  return str
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, '\\A ')
+}
+
 /**
  * A contenteditable-based editor that renders {{SELECT_TEXT}} as a visual chip.
  * The chip is not editable and by default cannot be deleted (controlled via `chipDeletable` prop).
@@ -41,27 +57,27 @@ export function PlaceholderChipEditor({
   const chipLabel = t('settings.quickFollow.chip.label')
   const chipTooltip = t('settings.quickFollow.chip.tooltip')
 
+  const escapedChipLabel = escapeHtml(chipLabel)
+  const escapedChipTooltip = escapeCssString(chipTooltip)
+  const escapedPlaceholder = escapeCssString(placeholder || '')
+
   // Convert template string to HTML with chip elements
   const templateToHtml = useCallback(
     (template: string): string => {
       const parts = template.split(QUICK_FOLLOW_PLACEHOLDER)
       const htmlParts = parts.map((part, index) => {
         // Escape HTML entities and convert newlines to <br>
-        const escaped = part
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/\n/g, '<br>')
+        const escaped = escapeHtml(part).replace(/\n/g, '<br>')
 
         if (index < parts.length - 1) {
           // Add chip after this part (except for the last part)
-          return `${escaped}<span ${CHIP_DATA_ATTR}="true" contenteditable="false" style="display: inline-block; background: var(--chakra-colors-blue-emphasized); color: var(--chakra-colors-fg); padding: 2px 10px; border-radius: 9999px; font-size: 0.75rem; user-select: none; cursor: default; margin: 0 2px; vertical-align: baseline;">${chipLabel}</span>`
+          return `${escaped}<span ${CHIP_DATA_ATTR}="true" contenteditable="false" style="display: inline-block; background: var(--chakra-colors-blue-emphasized); color: var(--chakra-colors-fg); padding: 2px 10px; border-radius: 9999px; font-size: 0.75rem; user-select: none; cursor: default; margin: 0 2px; vertical-align: baseline;">${escapedChipLabel}</span>`
         }
         return escaped
       })
       return htmlParts.join('')
     },
-    [chipLabel]
+    [escapedChipLabel]
   )
 
   // Convert HTML content back to template string
@@ -446,7 +462,7 @@ export function PlaceholderChipEditor({
         }}
         css={{
           '&:empty::before': {
-            content: `"${placeholder || ''}"`,
+            content: `"${escapedPlaceholder}"`,
             color: 'var(--chakra-colors-gray-400)',
             pointerEvents: 'none'
           }
@@ -456,7 +472,7 @@ export function PlaceholderChipEditor({
       {/* Tooltip for chips - rendered via CSS hover on the chip elements */}
       <style>{`
         [${CHIP_DATA_ATTR}]:hover::after {
-          content: "${chipTooltip}";
+          content: "${escapedChipTooltip}";
           position: absolute;
           bottom: 100%;
           left: 50%;
