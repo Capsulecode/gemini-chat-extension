@@ -190,7 +190,43 @@ function WidthControl({
   )
 }
 
-function SvgIcon({ svg }: { svg: string }) {
+export function sanitizeSvg(svg: string): string {
+  if (typeof DOMParser === 'undefined') {
+    return svg
+  }
+  try {
+    const parser = new DOMParser()
+    const doc = parser.parseFromString(svg, 'image/svg+xml')
+    const parserError = doc.querySelector('parsererror')
+    if (parserError) {
+      return ''
+    }
+
+    const elements = doc.querySelectorAll('*')
+    elements.forEach((el) => {
+      const tagName = el.tagName.toLowerCase()
+      if (tagName === 'script' || tagName === 'foreignobject') {
+        el.remove()
+        return
+      }
+
+      Array.from(el.attributes).forEach((attr) => {
+        const name = attr.name.toLowerCase()
+        const val = attr.value.trim().toLowerCase()
+        if (name.startsWith('on') || val.startsWith('javascript:')) {
+          el.removeAttribute(attr.name)
+        }
+      })
+    })
+
+    return doc.documentElement ? doc.documentElement.outerHTML : ''
+  } catch {
+    return ''
+  }
+}
+
+export function SvgIcon({ svg }: { svg: string }) {
+  const cleanSvg = sanitizeSvg(svg)
   return (
     <Box
       aria-hidden="true"
@@ -198,7 +234,7 @@ function SvgIcon({ svg }: { svg: string }) {
       display="block"
       flexShrink={0}
       lineHeight="1"
-      dangerouslySetInnerHTML={{ __html: svg }}
+      dangerouslySetInnerHTML={{ __html: cleanSvg }}
       css={{ '& svg': { display: 'block', width: '100%', height: '100%' } }}
     />
   )
