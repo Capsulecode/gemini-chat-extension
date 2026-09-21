@@ -461,6 +461,21 @@ describe('responseCompleteNotification background V2', () => {
     })
   })
 
+  it('rejects save message when dataUrl is not a data: scheme URL', async () => {
+    const response = await sendRuntimeMessage({
+      type: RESPONSE_COMPLETE_NOTIFICATION_AUDIO_ASSET_SAVE_MESSAGE,
+      payload: {
+        fileName: 'custom.mp3',
+        mimeType: 'audio/mpeg',
+        size: 5,
+        dataUrl: 'https://evil.com/malicious.mp3',
+      },
+    })
+
+    expect(persistAudioAssetMock).not.toHaveBeenCalled()
+    expect(response).toBeUndefined()
+  })
+
   it('deletes uploaded notification audio from the background origin', async () => {
     const response = await sendRuntimeMessage({
       type: RESPONSE_COMPLETE_NOTIFICATION_AUDIO_ASSET_DELETE_MESSAGE,
