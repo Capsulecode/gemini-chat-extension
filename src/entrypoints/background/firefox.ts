@@ -278,6 +278,12 @@ export function startFirefoxBackground(): void {
   )
 
   browser.runtime.onMessage.addListener((message) => {
+    // Security / Defense in Depth: Validate incoming runtime message parameter is a non-null object
+    // before passing to type guards or accessing properties.
+    if (!message || typeof message !== 'object') {
+      return
+    }
+
     if (isFirefoxGetInstanceIdMessage(message)) {
       return Promise.resolve({ instanceId: firefoxInstanceId })
     }
