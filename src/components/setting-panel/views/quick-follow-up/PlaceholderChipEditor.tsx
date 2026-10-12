@@ -51,6 +51,8 @@ export function PlaceholderChipEditor({
           .replace(/&/g, '&amp;')
           .replace(/</g, '&lt;')
           .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;')
           .replace(/\n/g, '<br>')
 
         if (index < parts.length - 1) {
