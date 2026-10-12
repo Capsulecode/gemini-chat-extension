@@ -1,0 +1,4 @@
+## 2026-10-12 - Strict Protocol and Origin Validation for Extension Open In New Tab Message
+**Vulnerability:** Runtime extension messaging for opening new tabs (`OPEN_IN_NEW_TAB_MESSAGE`) relied solely on origin checking without explicitly enforcing the `https:` scheme, potentially allowing unsafe protocols or protocol manipulation bypasses.
+**Learning:** Checking `parsed.origin` alone might behave unexpectedly or allow non-https schemes (or `data:`/`javascript:` URIs where origin resolution evaluates differently). Enforcing both `parsed.protocol === 'https:'` and `parsed.origin === 'https://gemini.google.com'` guarantees strict transport safety and origin boundary enforcement.
+**Prevention:** Always validate both `protocol` and `origin` when handling user-provided or content-script-provided URLs before invoking privileged extension APIs like `browser.tabs.create`.
