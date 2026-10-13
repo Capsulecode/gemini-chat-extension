@@ -41,7 +41,16 @@ export function WhatsNewToast({ version, features, onClose }: WhatsNewToastProps
     if (!action) return
 
     if (action.action === 'external-link') {
-      window.open(action.params.url, '_blank', 'noopener,noreferrer')
+      try {
+        const parsed = new URL(action.params.url)
+        if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+          window.open(parsed.href, '_blank', 'noopener,noreferrer')
+        } else {
+          console.warn('[WhatsNewToast] Blocked non-http/https promo action URL:', action.params.url)
+        }
+      } catch {
+        console.warn('[WhatsNewToast] Invalid promo action URL:', action.params.url)
+      }
       return
     }
 
