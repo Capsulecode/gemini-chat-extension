@@ -37,8 +37,13 @@ const __dirname = path.dirname(__filename);
 const SAMPLE_RESPONSE_PATH = path.resolve(__dirname, '../../test/samples/media-response.txt');
 const sampleResponse = fs.readFileSync(SAMPLE_RESPONSE_PATH, 'utf-8');
 const LIBRARY_REQUEST_PATH = path.resolve(__dirname, '../../.original/library/request.md');
-const libraryRequestMarkdown = fs.readFileSync(LIBRARY_REQUEST_PATH, 'utf-8');
-const libraryResponse = libraryRequestMarkdown.match(/```([\s\S]*?)```/)?.[1]?.trim() ?? '';
+const libraryRequestMarkdown = fs.existsSync(LIBRARY_REQUEST_PATH)
+  ? fs.readFileSync(LIBRARY_REQUEST_PATH, 'utf-8')
+  : '';
+const MOCK_LIBRARY_RESPONSE = ")]}'\n\n105\n" + JSON.stringify([
+  ['wResponse', null, JSON.stringify([[[['c_9f13b6112bdb41cf', 'r_bcb2eed9c92e4379'], [1781941629, 0], 1, null, [null, 'https://lh3.googleusercontent.com/sample']]]])],
+]);
+const libraryResponse = libraryRequestMarkdown.match(/```([\s\S]*?)```/)?.[1]?.trim() || MOCK_LIBRARY_RESPONSE;
 
 describe('stuffMediaParser', () => {
   // ==================== Request Type Identification ====================
