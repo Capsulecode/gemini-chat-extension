@@ -597,6 +597,10 @@ function handleRuntimeMessage(
 }
 
 async function dataUrlToBlob(dataUrl: string, fallbackMimeType: string): Promise<Blob> {
+  // Security validation: strictly enforce data URL scheme to prevent arbitrary requests
+  if (!dataUrl.toLowerCase().startsWith('data:')) {
+    throw new Error('Invalid data URL protocol')
+  }
   const response = await fetch(dataUrl)
   const blob = await response.blob()
   if (blob.type) {
