@@ -126,19 +126,26 @@ export function handleOpenInNewTab(url: string): void {
       url,
     })
 
+    // Security Check: Validate URL scheme to prevent script execution or unsafe protocols
+    const parsedUrl = new URL(url, window.location.origin)
+    if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+      console.warn('[Navigation] Refusing to open non-http/https URL:', url)
+      return
+    }
+
     if (import.meta.env.FIREFOX) {
       void browser.runtime.sendMessage({
         type: OPEN_IN_NEW_TAB_MESSAGE,
-        payload: { url },
+        payload: { url: parsedUrl.href },
       }).catch((error) => {
         console.warn('[Navigation] Failed to request new tab:', error)
-        window.open(url, '_blank')
+        window.open(parsedUrl.href, '_blank', 'noopener,noreferrer')
       })
       return
     }
 
-    // Open in new tab
-    window.open(url, '_blank')
+    // Securely open in new tab with noopener,noreferrer to prevent reverse tabnabbing
+    window.open(parsedUrl.href, '_blank', 'noopener,noreferrer')
   } catch (error) {
     console.error('[Navigation] Error opening in new tab:', error)
   }
