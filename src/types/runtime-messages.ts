@@ -310,6 +310,7 @@ export function isResponseCompleteNotificationAudioAssetSaveMessage(
     && typeof candidate.payload.mimeType === 'string'
     && typeof candidate.payload.size === 'number'
     && typeof candidate.payload.dataUrl === 'string'
+    && candidate.payload.dataUrl.startsWith('data:')
 }
 
 export function isResponseCompleteNotificationAudioAssetDeleteMessage(

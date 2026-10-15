@@ -597,6 +597,9 @@ function handleRuntimeMessage(
 }
 
 async function dataUrlToBlob(dataUrl: string, fallbackMimeType: string): Promise<Blob> {
+  if (!dataUrl.startsWith('data:')) {
+    throw new Error('Invalid data URL: scheme must be data:')
+  }
   const response = await fetch(dataUrl)
   const blob = await response.blob()
   if (blob.type) {
