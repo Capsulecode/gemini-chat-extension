@@ -597,6 +597,9 @@ function handleRuntimeMessage(
 }
 
 async function dataUrlToBlob(dataUrl: string, fallbackMimeType: string): Promise<Blob> {
+  if (!dataUrl.startsWith('data:')) {
+    throw new Error('invalid-data-url')
+  }
   const response = await fetch(dataUrl)
   const blob = await response.blob()
   if (blob.type) {
