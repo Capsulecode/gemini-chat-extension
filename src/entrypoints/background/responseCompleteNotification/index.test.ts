@@ -83,11 +83,15 @@ const {
   deleteAudioAssetMock: vi.fn(),
 }))
 
-vi.mock('@/services/responseCompleteNotificationAudioAsset', () => ({
-  getResponseCompleteNotificationAudioAssetMetadata: getAudioAssetMetadataMock,
-  persistResponseCompleteNotificationAudioAsset: persistAudioAssetMock,
-  deleteResponseCompleteNotificationAudioAsset: deleteAudioAssetMock,
-}))
+vi.mock('@/services/responseCompleteNotificationAudioAsset', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/services/responseCompleteNotificationAudioAsset')>()
+  return {
+    ...actual,
+    getResponseCompleteNotificationAudioAssetMetadata: getAudioAssetMetadataMock,
+    persistResponseCompleteNotificationAudioAsset: persistAudioAssetMock,
+    deleteResponseCompleteNotificationAudioAsset: deleteAudioAssetMock,
+  }
+})
 
 vi.mock('wxt/browser', () => ({
   browser: {
@@ -459,6 +463,41 @@ describe('responseCompleteNotification background V2', () => {
         fileName: 'custom.mp3',
       }),
     })
+  })
+
+  it('rejects invalid audio asset save payloads', async () => {
+    const invalidScheme = await sendRuntimeMessage({
+      type: RESPONSE_COMPLETE_NOTIFICATION_AUDIO_ASSET_SAVE_MESSAGE,
+      payload: {
+        fileName: 'script.js',
+        mimeType: 'audio/mpeg',
+        size: 5,
+        dataUrl: 'data:text/javascript;base64,YWxlcnQoMSk=',
+      },
+    })
+    expect(invalidScheme).toEqual({ ok: false, error: 'notification-failed' })
+
+    const invalidMime = await sendRuntimeMessage({
+      type: RESPONSE_COMPLETE_NOTIFICATION_AUDIO_ASSET_SAVE_MESSAGE,
+      payload: {
+        fileName: 'script.js',
+        mimeType: 'text/javascript',
+        size: 5,
+        dataUrl: 'data:audio/mpeg;base64,YXVkaW8=',
+      },
+    })
+    expect(invalidMime).toEqual({ ok: false, error: 'notification-failed' })
+
+    const oversized = await sendRuntimeMessage({
+      type: RESPONSE_COMPLETE_NOTIFICATION_AUDIO_ASSET_SAVE_MESSAGE,
+      payload: {
+        fileName: 'large.mp3',
+        mimeType: 'audio/mpeg',
+        size: 3 * 1024 * 1024,
+        dataUrl: 'data:audio/mpeg;base64,YXVkaW8=',
+      },
+    })
+    expect(oversized).toEqual({ ok: false, error: 'notification-failed' })
   })
 
   it('deletes uploaded notification audio from the background origin', async () => {
