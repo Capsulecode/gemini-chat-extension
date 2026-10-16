@@ -122,6 +122,12 @@ export function resolveOpenInNewTabUrl(cardElement: Element): string | null {
  */
 export function handleOpenInNewTab(url: string): void {
   try {
+    // Validate URL scheme to prevent javascript: or other unsafe protocols
+    if (!/^https?:\/\//i.test(url) && !url.startsWith('/')) {
+      console.warn('[Navigation] Refusing to open unsafe URL:', url)
+      return
+    }
+
     console.log('[Navigation] Opening in new tab:', {
       url,
     })
@@ -132,13 +138,13 @@ export function handleOpenInNewTab(url: string): void {
         payload: { url },
       }).catch((error) => {
         console.warn('[Navigation] Failed to request new tab:', error)
-        window.open(url, '_blank')
+        window.open(url, '_blank', 'noopener,noreferrer')
       })
       return
     }
 
-    // Open in new tab
-    window.open(url, '_blank')
+    // Open in new tab with noopener,noreferrer
+    window.open(url, '_blank', 'noopener,noreferrer')
   } catch (error) {
     console.error('[Navigation] Error opening in new tab:', error)
   }
