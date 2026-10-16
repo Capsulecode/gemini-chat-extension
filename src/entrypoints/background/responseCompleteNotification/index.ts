@@ -34,6 +34,7 @@ import {
   deleteResponseCompleteNotificationAudioAsset,
   getResponseCompleteNotificationAudioAssetMetadata,
   persistResponseCompleteNotificationAudioAsset,
+  RESPONSE_COMPLETE_NOTIFICATION_AUDIO_FILE_SIZE_LIMIT,
 } from '@/services/responseCompleteNotificationAudioAsset'
 import { playResponseCompleteNotificationAudio } from './audio'
 import {
@@ -619,6 +620,18 @@ async function handleSaveNotificationAudioAsset(payload: {
   dataUrl: string
 }): Promise<ResponseCompleteNotificationResponse> {
   try {
+    // Validate payload fields before processing to prevent security risks (SSR/data-URL abuse, oversized payloads)
+    if (
+      !payload.dataUrl.startsWith('data:audio/') ||
+      !payload.mimeType.startsWith('audio/') ||
+      payload.size >= RESPONSE_COMPLETE_NOTIFICATION_AUDIO_FILE_SIZE_LIMIT
+    ) {
+      return {
+        ok: false,
+        error: 'notification-failed',
+      }
+    }
+
     const blob = await dataUrlToBlob(payload.dataUrl, payload.mimeType)
     const audioAsset = await persistResponseCompleteNotificationAudioAsset({
       fileName: payload.fileName,
