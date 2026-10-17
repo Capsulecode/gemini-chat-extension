@@ -107,8 +107,9 @@ export default defineUnlistedScript(() => {
   }
 
   const handleMessage = (event: MessageEvent) => {
-    if (event.source !== window) return
+    // SECURITY: Check origin first before accessing or processing event payload to prevent cross-origin messaging spoofing/leaks
     if (event.origin !== window.location.origin) return
+    if (event.source !== window) return
     const data = event.data as {
       source?: string
       type?: string
