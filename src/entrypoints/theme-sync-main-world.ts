@@ -1,3 +1,4 @@
+import { defineUnlistedScript } from 'wxt/utils/define-unlisted-script'
 import { GEM_EXT_EVENTS } from '@/common/event'
 
 const STORAGE_KEY_THEME = 'theme'
@@ -93,6 +94,24 @@ function applyAppearance(detail: ThemeAppearanceApplyEventDetail): void {
 }
 
 export default defineUnlistedScript(() => {
+  /**
+   * Validates theme appearance detail properties to ensure strictly expected types and values.
+   */
+  const isValidDetail = (detail: unknown): detail is ThemeAppearanceApplyEventDetail => {
+    if (!detail || typeof detail !== 'object') return false
+    const { theme, bardColorTheme } = detail as ThemeAppearanceApplyEventDetail
+    if (theme !== 'light' && theme !== 'dark') return false
+    if (
+      bardColorTheme !== undefined &&
+      bardColorTheme !== null &&
+      bardColorTheme !== 'Bard-Light-Theme' &&
+      bardColorTheme !== 'Bard-Dark-Theme'
+    ) {
+      return false
+    }
+    return true
+  }
+
   const handleAppearanceApply = (event: Event) => {
     const customEvent = event as CustomEvent<ThemeAppearanceApplyEventDetail>
     const detail = customEvent.detail
@@ -100,27 +119,33 @@ export default defineUnlistedScript(() => {
       href: window.location.href,
       detail,
     })
-    if (!detail || (detail.theme !== 'light' && detail.theme !== 'dark')) {
+    if (!isValidDetail(detail)) {
       return
     }
     applyAppearance(detail)
   }
 
   const handleMessage = (event: MessageEvent) => {
+    // Security check: verify event originates strictly from current window and same origin
     if (event.source !== window) return
     if (event.origin !== window.location.origin) return
+
     const data = event.data as {
       source?: string
       type?: string
       detail?: ThemeAppearanceApplyEventDetail
     }
-    if (data?.source !== 'gpk-theme-sync' || data?.type !== 'apply') return
+    if (!data || typeof data !== 'object') return
+    if (data.source !== 'gpk-theme-sync' || data.type !== 'apply') return
+
     const detail = data.detail
     console.log('[ThemeAppearanceDebug][MainWorld] message', {
       href: window.location.href,
       detail,
     })
-    if (!detail || (detail.theme !== 'light' && detail.theme !== 'dark')) {
+
+    // Strict validation of payload detail to prevent unsafe or malformed property injection
+    if (!isValidDetail(detail)) {
       return
     }
     applyAppearance(detail)
