@@ -1,0 +1,4 @@
+## 2026-10-19 - Main World Window PostMessage Origin and Detail Validation
+**Vulnerability:** Loose cross-window message listeners in main-world scripts (`window.addEventListener('message')`) can process postMessage events from null origins or untrusted frames if `event.origin` or `event.source` checks are missing or incomplete, leading to unauthorized state manipulation.
+**Learning:** `window.location.origin` inside web pages or extension scripts can evaluate to `"null"` in sandboxed frames or opaque origins. A strict origin check must explicitly reject `!event.origin` and `event.origin === 'null'` alongside checking `event.origin !== window.location.origin`.
+**Prevention:** Always validate `event.source === window`, `event.origin === window.location.origin`, `event.origin !== 'null'`, and strictly sanitize payload fields before processing any `window.postMessage` event.
