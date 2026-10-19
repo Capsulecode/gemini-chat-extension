@@ -107,22 +107,37 @@ export default defineUnlistedScript(() => {
   }
 
   const handleMessage = (event: MessageEvent) => {
+    // Security check: Validate origin and event source strictly
     if (event.source !== window) return
-    if (event.origin !== window.location.origin) return
+    if (!event.origin || event.origin === 'null' || event.origin !== window.location.origin) return
+
     const data = event.data as {
       source?: string
       type?: string
       detail?: ThemeAppearanceApplyEventDetail
     }
     if (data?.source !== 'gpk-theme-sync' || data?.type !== 'apply') return
+
     const detail = data.detail
+    // Security check: Validate detail structure and permitted values
+    if (!detail || (detail.theme !== 'light' && detail.theme !== 'dark')) {
+      return
+    }
+    if (detail.mode !== 'system' && detail.mode !== 'light' && detail.mode !== 'dark') {
+      return
+    }
+    if (
+      detail.bardColorTheme !== null &&
+      detail.bardColorTheme !== 'Bard-Light-Theme' &&
+      detail.bardColorTheme !== 'Bard-Dark-Theme'
+    ) {
+      return
+    }
+
     console.log('[ThemeAppearanceDebug][MainWorld] message', {
       href: window.location.href,
       detail,
     })
-    if (!detail || (detail.theme !== 'light' && detail.theme !== 'dark')) {
-      return
-    }
     applyAppearance(detail)
   }
 
