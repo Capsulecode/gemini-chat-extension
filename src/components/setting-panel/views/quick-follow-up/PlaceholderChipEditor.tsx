@@ -40,6 +40,10 @@ export function PlaceholderChipEditor({
 
   const chipLabel = t('settings.quickFollow.chip.label')
   const chipTooltip = t('settings.quickFollow.chip.tooltip')
+  const safeChipTooltip = chipTooltip
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/\r?\n/g, '\\A ')
 
   // Convert template string to HTML with chip elements
   const templateToHtml = useCallback(
@@ -456,7 +460,7 @@ export function PlaceholderChipEditor({
       {/* Tooltip for chips - rendered via CSS hover on the chip elements */}
       <style>{`
         [${CHIP_DATA_ATTR}]:hover::after {
-          content: "${chipTooltip}";
+          content: "${safeChipTooltip}";
           position: absolute;
           bottom: 100%;
           left: 50%;
