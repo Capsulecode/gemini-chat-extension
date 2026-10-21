@@ -122,23 +122,34 @@ export function resolveOpenInNewTabUrl(cardElement: Element): string | null {
  */
 export function handleOpenInNewTab(url: string): void {
   try {
+    const parsedUrl = new URL(url, window.location.origin)
+
+    // Security check: only allow http/https protocols matching current origin to prevent open redirect and execution of arbitrary schemes like javascript:
+    if (
+      (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') ||
+      parsedUrl.origin !== window.location.origin
+    ) {
+      console.warn('[Navigation] Blocked open in new tab for untrusted or invalid URL:', url)
+      return
+    }
+
     console.log('[Navigation] Opening in new tab:', {
-      url,
+      url: parsedUrl.href,
     })
 
     if (import.meta.env.FIREFOX) {
       void browser.runtime.sendMessage({
         type: OPEN_IN_NEW_TAB_MESSAGE,
-        payload: { url },
+        payload: { url: parsedUrl.href },
       }).catch((error) => {
         console.warn('[Navigation] Failed to request new tab:', error)
-        window.open(url, '_blank')
+        window.open(parsedUrl.href, '_blank', 'noopener,noreferrer')
       })
       return
     }
 
-    // Open in new tab
-    window.open(url, '_blank')
+    // Open in new tab securely with noopener,noreferrer
+    window.open(parsedUrl.href, '_blank', 'noopener,noreferrer')
   } catch (error) {
     console.error('[Navigation] Error opening in new tab:', error)
   }

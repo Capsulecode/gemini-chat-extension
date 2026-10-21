@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MediaItemStatus, type MediaItem } from '@/utils/stuffMediaParser'
 import { stuffDataCache } from './dataCache'
-import { resolveOpenInNewTabUrl } from './navigation'
+import { handleOpenInNewTab, resolveOpenInNewTabUrl } from './navigation'
 
 vi.mock('wxt/browser', () => ({
   browser: {
@@ -96,5 +96,36 @@ describe('resolveOpenInNewTabUrl', () => {
     expect(resolveOpenInNewTabUrl(createCard(null))).toBeNull()
     expect(resolveOpenInNewTabUrl(createCard('invalid'))).toBeNull()
     expect(resolveOpenInNewTabUrl(createCard('299880;data:[3,[]]'))).toBeNull()
+  })
+})
+
+describe('handleOpenInNewTab', () => {
+  let openSpy: ReturnType<typeof vi.spyOn>
+
+  beforeEach(() => {
+    openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
+  })
+
+  afterEach(() => {
+    openSpy.mockRestore()
+  })
+
+  it('opens same-origin URLs in new tab with noopener,noreferrer', () => {
+    const validUrl = `${window.location.origin}/app/abc123#def456`
+    handleOpenInNewTab(validUrl)
+
+    expect(openSpy).toHaveBeenCalledWith(validUrl, '_blank', 'noopener,noreferrer')
+  })
+
+  it('blocks untrusted javascript: URLs', () => {
+    handleOpenInNewTab('javascript:alert(1)')
+
+    expect(openSpy).not.toHaveBeenCalled()
+  })
+
+  it('blocks cross-origin URLs', () => {
+    handleOpenInNewTab('https://malicious-website.com/app/abc123')
+
+    expect(openSpy).not.toHaveBeenCalled()
   })
 })
