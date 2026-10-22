@@ -36,9 +36,14 @@ const __dirname = path.dirname(__filename);
 // Read test sample data
 const SAMPLE_RESPONSE_PATH = path.resolve(__dirname, '../../test/samples/media-response.txt');
 const sampleResponse = fs.readFileSync(SAMPLE_RESPONSE_PATH, 'utf-8');
+const LIBRARY_RESPONSE_FALLBACK_PATH = path.resolve(__dirname, '../../test/samples/library-response.txt');
 const LIBRARY_REQUEST_PATH = path.resolve(__dirname, '../../.original/library/request.md');
-const libraryRequestMarkdown = fs.readFileSync(LIBRARY_REQUEST_PATH, 'utf-8');
-const libraryResponse = libraryRequestMarkdown.match(/```([\s\S]*?)```/)?.[1]?.trim() ?? '';
+const libraryRequestMarkdown = fs.existsSync(LIBRARY_REQUEST_PATH)
+  ? fs.readFileSync(LIBRARY_REQUEST_PATH, 'utf-8')
+  : '';
+const libraryResponse = libraryRequestMarkdown
+  ? (libraryRequestMarkdown.match(/```([\s\S]*?)```/)?.[1]?.trim() ?? '')
+  : fs.readFileSync(LIBRARY_RESPONSE_FALLBACK_PATH, 'utf-8');
 
 describe('stuffMediaParser', () => {
   // ==================== Request Type Identification ====================
