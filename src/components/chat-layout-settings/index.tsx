@@ -17,8 +17,6 @@ import {
   Switch,
   Text,
 } from '@chakra-ui/react'
-import leftAlignSvg from '@/assets/left-align.svg?raw'
-import rightAlignSvg from '@/assets/right-align.svg?raw'
 import { toaster } from '@/components/ui/toaster'
 import {
   CHAT_WIDTH_PERCENT_MAX,
@@ -190,7 +188,7 @@ function WidthControl({
   )
 }
 
-function SvgIcon({ svg }: { svg: string }) {
+function LeftAlignIcon() {
   return (
     <Box
       aria-hidden="true"
@@ -198,9 +196,51 @@ function SvgIcon({ svg }: { svg: string }) {
       display="block"
       flexShrink={0}
       lineHeight="1"
-      dangerouslySetInnerHTML={{ __html: svg }}
-      css={{ '& svg': { display: 'block', width: '100%', height: '100%' } }}
-    />
+    >
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        style={{ width: '100%', height: '100%', display: 'block' }}
+      >
+        <path
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          d="M4 6h16M4 12h10M4 18h14"
+        />
+      </svg>
+    </Box>
+  )
+}
+
+function RightAlignIcon() {
+  return (
+    <Box
+      aria-hidden="true"
+      boxSize={4}
+      display="block"
+      flexShrink={0}
+      lineHeight="1"
+    >
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        style={{ width: '100%', height: '100%', display: 'block' }}
+      >
+        <path
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          d="M4 6h16m-10 6h10M6 18h14"
+        />
+      </svg>
+    </Box>
   )
 }
 
@@ -369,7 +409,7 @@ function ChatLayoutControls({
                   justifyContent="center"
                   lineHeight="1"
                 >
-                  <SvgIcon svg={leftAlignSvg} />
+                  <LeftAlignIcon />
                 </Box>
               </SegmentGroup.ItemText>
               <SegmentGroup.ItemHiddenInput />
@@ -390,7 +430,7 @@ function ChatLayoutControls({
                   justifyContent="center"
                   lineHeight="1"
                 >
-                  <SvgIcon svg={rightAlignSvg} />
+                  <RightAlignIcon />
                 </Box>
               </SegmentGroup.ItemText>
               <SegmentGroup.ItemHiddenInput />
