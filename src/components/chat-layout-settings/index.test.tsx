@@ -85,6 +85,14 @@ describe('ChatLayoutSettings', () => {
     })
   }
 
+  it('renders alignment SVG icons safely without dangerouslySetInnerHTML', async () => {
+    await renderSettings()
+
+    const svgElements = container.querySelectorAll('svg')
+    expect(svgElements.length).toBeGreaterThanOrEqual(2)
+    expect(container.innerHTML).not.toContain('dangerouslySetInnerHTML')
+  })
+
   it('renders as a titled default Theme section', async () => {
     await renderSettings()
 
