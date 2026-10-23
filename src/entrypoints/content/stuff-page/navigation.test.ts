@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MediaItemStatus, type MediaItem } from '@/utils/stuffMediaParser'
 import { stuffDataCache } from './dataCache'
-import { resolveOpenInNewTabUrl } from './navigation'
+import { handleOpenInNewTab, resolveOpenInNewTabUrl } from './navigation'
 
 vi.mock('wxt/browser', () => ({
   browser: {
@@ -96,5 +96,29 @@ describe('resolveOpenInNewTabUrl', () => {
     expect(resolveOpenInNewTabUrl(createCard(null))).toBeNull()
     expect(resolveOpenInNewTabUrl(createCard('invalid'))).toBeNull()
     expect(resolveOpenInNewTabUrl(createCard('299880;data:[3,[]]'))).toBeNull()
+  })
+})
+
+describe('handleOpenInNewTab', () => {
+  beforeEach(() => {
+    vi.spyOn(window, 'open').mockImplementation(() => null)
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('opens valid HTTP/HTTPS URLs with noopener,noreferrer', () => {
+    const validUrl = `${window.location.origin}/app/abc123#def456`
+    handleOpenInNewTab(validUrl)
+
+    expect(window.open).toHaveBeenCalledWith(validUrl, '_blank', 'noopener,noreferrer')
+  })
+
+  it('rejects unsafe URL schemes like javascript:', () => {
+    const unsafeUrl = 'javascript:alert(1)'
+    handleOpenInNewTab(unsafeUrl)
+
+    expect(window.open).not.toHaveBeenCalled()
   })
 })
