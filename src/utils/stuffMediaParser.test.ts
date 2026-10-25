@@ -37,7 +37,7 @@ const __dirname = path.dirname(__filename);
 const SAMPLE_RESPONSE_PATH = path.resolve(__dirname, '../../test/samples/media-response.txt');
 const sampleResponse = fs.readFileSync(SAMPLE_RESPONSE_PATH, 'utf-8');
 const LIBRARY_REQUEST_PATH = path.resolve(__dirname, '../../.original/library/request.md');
-const libraryRequestMarkdown = fs.readFileSync(LIBRARY_REQUEST_PATH, 'utf-8');
+const libraryRequestMarkdown = fs.existsSync(LIBRARY_REQUEST_PATH) ? fs.readFileSync(LIBRARY_REQUEST_PATH, 'utf-8') : '';
 const libraryResponse = libraryRequestMarkdown.match(/```([\s\S]*?)```/)?.[1]?.trim() ?? '';
 
 describe('stuffMediaParser', () => {
@@ -194,7 +194,7 @@ describe('stuffMediaParser', () => {
       expect(titleItems[0].title).toBe('Why Warren Buffett Bought SIRI XM Despite Huge Losses');
     });
 
-    it('should parse current Library media response data', () => {
+    it.skipIf(!fs.existsSync(LIBRARY_REQUEST_PATH))('should parse current Library media response data', () => {
       const result = parseMediaResponse(libraryResponse);
 
       expect(result).not.toBeNull();
