@@ -461,6 +461,24 @@ describe('responseCompleteNotification background V2', () => {
     })
   })
 
+  it('rejects saving notification audio when dataUrl is not a data scheme', async () => {
+    const response = await sendRuntimeMessage({
+      type: RESPONSE_COMPLETE_NOTIFICATION_AUDIO_ASSET_SAVE_MESSAGE,
+      payload: {
+        fileName: 'custom.mp3',
+        mimeType: 'audio/mpeg',
+        size: 5,
+        dataUrl: 'https://example.com/audio.mp3',
+      },
+    })
+
+    expect(persistAudioAssetMock).not.toHaveBeenCalled()
+    expect(response).toEqual({
+      ok: false,
+      error: 'notification-failed',
+    })
+  })
+
   it('deletes uploaded notification audio from the background origin', async () => {
     const response = await sendRuntimeMessage({
       type: RESPONSE_COMPLETE_NOTIFICATION_AUDIO_ASSET_DELETE_MESSAGE,
