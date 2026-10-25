@@ -116,12 +116,34 @@ export function resolveOpenInNewTabUrl(cardElement: Element): string | null {
 }
 
 /**
+ * Validate navigation URL for opening in a new tab.
+ * Ensures the URL uses http/https protocol and matches current location origin.
+ */
+export function isValidOpenInNewTabUrl(url: string): boolean {
+  if (!url || typeof url !== 'string') return false
+  try {
+    const parsed = new URL(url, window.location.origin)
+    return (
+      (parsed.protocol === 'http:' || parsed.protocol === 'https:') &&
+      parsed.origin === window.location.origin
+    )
+  } catch {
+    return false
+  }
+}
+
+/**
  * Handle "Open in New Tab" button click
  *
  * @param url The pre-resolved absolute URL.
  */
 export function handleOpenInNewTab(url: string): void {
   try {
+    if (!isValidOpenInNewTabUrl(url)) {
+      console.warn('[Navigation] Blocked invalid or untrusted URL:', url)
+      return
+    }
+
     console.log('[Navigation] Opening in new tab:', {
       url,
     })
@@ -132,13 +154,13 @@ export function handleOpenInNewTab(url: string): void {
         payload: { url },
       }).catch((error) => {
         console.warn('[Navigation] Failed to request new tab:', error)
-        window.open(url, '_blank')
+        window.open(url, '_blank', 'noopener,noreferrer')
       })
       return
     }
 
-    // Open in new tab
-    window.open(url, '_blank')
+    // Open in new tab securely (prevent reverse tabnabbing)
+    window.open(url, '_blank', 'noopener,noreferrer')
   } catch (error) {
     console.error('[Navigation] Error opening in new tab:', error)
   }

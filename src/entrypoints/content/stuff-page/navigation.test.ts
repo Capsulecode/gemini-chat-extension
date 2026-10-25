@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MediaItemStatus, type MediaItem } from '@/utils/stuffMediaParser'
 import { stuffDataCache } from './dataCache'
-import { resolveOpenInNewTabUrl } from './navigation'
+import { isValidOpenInNewTabUrl, handleOpenInNewTab, resolveOpenInNewTabUrl } from './navigation'
 
 vi.mock('wxt/browser', () => ({
   browser: {
@@ -96,5 +96,45 @@ describe('resolveOpenInNewTabUrl', () => {
     expect(resolveOpenInNewTabUrl(createCard(null))).toBeNull()
     expect(resolveOpenInNewTabUrl(createCard('invalid'))).toBeNull()
     expect(resolveOpenInNewTabUrl(createCard('299880;data:[3,[]]'))).toBeNull()
+  })
+})
+
+describe('isValidOpenInNewTabUrl', () => {
+  it('validates same-origin http/https URLs', () => {
+    expect(isValidOpenInNewTabUrl(`${window.location.origin}/app/123#456`)).toBe(true)
+    expect(isValidOpenInNewTabUrl('/app/123')).toBe(true)
+  })
+
+  it('rejects cross-origin, javascript, and invalid URLs', () => {
+    expect(isValidOpenInNewTabUrl('javascript:alert(1)')).toBe(false)
+    expect(isValidOpenInNewTabUrl('https://malicious.example.com')).toBe(false)
+    expect(isValidOpenInNewTabUrl('data:text/html,test')).toBe(false)
+    expect(isValidOpenInNewTabUrl('')).toBe(false)
+  })
+})
+
+describe('handleOpenInNewTab', () => {
+  let windowOpenSpy: ReturnType<typeof vi.spyOn>
+
+  beforeEach(() => {
+    windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
+  })
+
+  afterEach(() => {
+    windowOpenSpy.mockRestore()
+  })
+
+  it('opens valid same-origin URL with noopener,noreferrer', () => {
+    const validUrl = `${window.location.origin}/app/123#456`
+    handleOpenInNewTab(validUrl)
+
+    if (!import.meta.env.FIREFOX) {
+      expect(windowOpenSpy).toHaveBeenCalledWith(validUrl, '_blank', 'noopener,noreferrer')
+    }
+  })
+
+  it('blocks untrusted/invalid URLs from being opened', () => {
+    handleOpenInNewTab('javascript:alert(1)')
+    expect(windowOpenSpy).not.toHaveBeenCalled()
   })
 })
