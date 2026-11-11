@@ -310,6 +310,8 @@ export function isResponseCompleteNotificationAudioAssetSaveMessage(
     && typeof candidate.payload.mimeType === 'string'
     && typeof candidate.payload.size === 'number'
     && typeof candidate.payload.dataUrl === 'string'
+    // Security: Ensure dataUrl strictly uses data: URI scheme to prevent SSRF or arbitrary network requests
+    && candidate.payload.dataUrl.startsWith('data:')
 }
 
 export function isResponseCompleteNotificationAudioAssetDeleteMessage(

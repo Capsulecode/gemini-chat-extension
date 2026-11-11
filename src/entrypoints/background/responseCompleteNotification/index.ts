@@ -597,6 +597,10 @@ function handleRuntimeMessage(
 }
 
 async function dataUrlToBlob(dataUrl: string, fallbackMimeType: string): Promise<Blob> {
+  // Security: Restrict URL to data: scheme to avoid arbitrary URL fetching or SSRF in background context
+  if (!dataUrl.startsWith('data:')) {
+    throw new Error('invalid-data-url-scheme')
+  }
   const response = await fetch(dataUrl)
   const blob = await response.blob()
   if (blob.type) {
